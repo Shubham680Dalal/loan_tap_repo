@@ -1,0 +1,10 @@
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learn  # For StandardScaler, MinMaxScaler, SimpleImputer, train_test_split, StratifiedKFold, LogisticRegression, metrics
+imbalanced-learn  # For SMOTE
+statsmodels   # For variance_inflation_factor
+mlxtend      # For plot_confusion_matrix
+beautifultable
+streamlit
