@@ -194,17 +194,17 @@ def wider_transformations(data,y,is_train=True,target_maps={},num_imputer=None,c
     num_cols = ['mort_acc', 'pub_rec_bankruptcies','revol_util']
     cat_cols = ['emp_length']
     
-    if is_train:
-        # Impute numerical columns
-        num_imputer = SimpleImputer(strategy='mean')
-        df[num_cols] = num_imputer.fit_transform(df[num_cols])
+    # if is_train:
+    #     # Impute numerical columns
+    #     num_imputer = SimpleImputer(strategy='mean')
+    #     df[num_cols] = num_imputer.fit_transform(df[num_cols])
 
-        # Impute categorical columns
-        cat_imputer = SimpleImputer(strategy='most_frequent')
-        df[cat_cols] = cat_imputer.fit_transform(df[cat_cols])
-    else:
-        df[num_cols] = num_imputer.transform(df[num_cols])
-        df[cat_cols] = cat_imputer.transform(df[cat_cols])
+    #     # Impute categorical columns
+    #     cat_imputer = SimpleImputer(strategy='most_frequent')
+    #     df[cat_cols] = cat_imputer.fit_transform(df[cat_cols])
+    # else:
+    #     df[num_cols] = num_imputer.transform(df[num_cols])
+    #     df[cat_cols] = cat_imputer.transform(df[cat_cols])
     
     
     #outlier treatment
