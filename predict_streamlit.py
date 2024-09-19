@@ -3,7 +3,12 @@ import pandas as pd
 import datetime
 import preprocessing_func as pf
 import pickle
-
+import os
+if os.path.exists('best_estimator1.pkl'):
+    st.write("Pickle file loaded successfully")
+else:
+    st.write("Pickle file not found")
+    
 param_dict=pickle.load(open('best_estimator1.pkl','rb'))
 param_grid=param_dict['param_grid']
 checkpoint_index=param_dict['checkpoint_index']  ##one already covered
