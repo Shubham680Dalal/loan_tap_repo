@@ -82,15 +82,15 @@ with st.form(key='loan_form'):
     col7, col8 = st.columns(2)
 
     with col7:
-        open_acc = float(st.text_input("Open Accounts", 0))
-        revol_bal = float(st.text_input("Revolving Balance", 0))
-        total_acc = float(st.text_input("Total Accounts", 0))
+        open_acc = int(st.text_input("Open Accounts", 0))
+        revol_bal = int(st.text_input("Revolving Balance", 0))
+        total_acc = int(st.text_input("Total Accounts", 0))
 
     with col8:
-        pub_rec = float(st.text_input("Public Record", 0))
-        revol_util = float(st.text_input("Revolving Utilization", 0))
-        mort_acc = float(st.text_input("Mortgage Accounts", 0))
-        pub_rec_bankruptcies = float(st.text_input("Public Record Bankruptcies", 0))
+        pub_rec = int(st.text_input("Public Record", 0))
+        revol_util = int(st.text_input("Revolving Utilization", 0))
+        mort_acc = int(st.text_input("Mortgage Accounts", 0))
+        pub_rec_bankruptcies = int(st.text_input("Public Record Bankruptcies", 0))
 
     # Submit button
     submit_button = st.form_submit_button(label="Submit")
@@ -127,10 +127,12 @@ if submit_button:
     }
 
     # Create a DataFrame from the dictionary
+    
     df = pd.DataFrame(data)
 
     # Display the DataFrame
     st.write("### Output Based on Submitted Data")
+    st.write(data)
     df,drop_str_cols=pf.narrow_transformations(df,non_collinear_columns,drop_str_cols=[])
     df=pf.wider_transformations(df,None,is_train=False,target_maps=target_maps,num_imputer=num_imputer,cat_imputer=cat_imputer,outliers=outliers)
     df=pf.transform_standardize_data(df,[col for col in numeric_cols if col in df],scalar)     
