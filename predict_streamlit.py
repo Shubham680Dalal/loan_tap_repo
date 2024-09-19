@@ -4,11 +4,7 @@ import datetime
 import preprocessing_func as pf
 import pickle
 import os
-if os.path.exists('best_estimator1.pkl'):
-    st.write("Pickle file loaded successfully")
-else:
-    st.write("Pickle file not found")
-    
+
 param_dict=pickle.load(open('best_estimator1.pkl','rb'))
 param_grid=param_dict['param_grid']
 checkpoint_index=param_dict['checkpoint_index']  ##one already covered
@@ -137,7 +133,7 @@ if submit_button:
 
     # Display the DataFrame
     st.write("### Output Based on Submitted Data")
-    st.write(data)
+    st.write(str({d:data[d][0] for d in data.keys()}))
     df,drop_str_cols=pf.narrow_transformations(df,non_collinear_columns,drop_str_cols=[])
     df=pf.wider_transformations(df,None,is_train=False,target_maps=target_maps,num_imputer=num_imputer,cat_imputer=cat_imputer,outliers=outliers)
     df=pf.transform_standardize_data(df,[col for col in numeric_cols if col in df],scalar)     
