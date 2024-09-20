@@ -23,7 +23,7 @@ jobs:
       run: pytest run_tests.py
 
   job2:
-
+    needs: job1
     runs-on: ubuntu-latest
 
     environment: production
@@ -53,5 +53,21 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Fill in the new imageID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: loan_app_cluster_from_aws1234Q4321
+        image: ${{steps.build-image.outputs.image}}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        task-definition: ${{steps.task-def.outputs.task-definition}}
+        service: loan_app_service
+        cluster: loan_app_cluster_from_aws1234Q4321
+        wait-for-service-stability: true
 
       
