@@ -9,3 +9,4 @@ mlxtend      # For plot_confusion_matrix
 beautifultable
 streamlit
 flask
+pytest
