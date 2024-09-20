@@ -8,3 +8,4 @@ statsmodels   # For variance_inflation_factor
 mlxtend      # For plot_confusion_matrix
 beautifultable
 streamlit
+flask
