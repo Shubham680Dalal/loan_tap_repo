@@ -36,3 +36,197 @@ The test performance of the best estimator showed:
 - Develop early warning systems to monitor at-risk borrowers, particularly those with increasing DTI and revolving utilization metrics.
 - Provide financial counseling and restructuring options for borrowers showing signs of financial distress.
 
+## Data Pipeline for Extraction, ML Model, and API Deployment
+
+
+### Flowchart Representation
+
+```mermaid
+flowchart TD
+    A[Data Sources] --> B[DB2 (Appstream - AWS)]
+    A --> C[Databricks]
+    A --> D[Local Data Warehouse]
+    B --> |Manual Extraction| E[Preprocessing (pandas)]
+    C --> |SQL Queries| E
+    D --> |SQL Queries| E
+    E --> F[Merged Data Stored in Local Data Warehouse]
+    F --> G[Basic EDA]
+    G --> H[Create Virtual Environment & Repository]
+    H --> I[Load Data & Train Model]
+    I --> J[Data Preprocessing & Cleaning]
+    I --> K[Model Training & Hyperparameter Tuning with MLflow]
+    K --> L[MLflow Logging & UI]
+    L --> M[Save Best Model as Pickle File]
+    M --> N[Streamlit & Flask Dashboard]
+    N --> O[Dockerize Application]
+    O --> P[Push to AWS ECR]
+    P --> Q[Create AWS ECS Task & Deploy Container]
+    Q --> R[API Hosting & Deployment]
+    Q --> T[CI/CD with Bitbucket/Jira]
+Details
+1. Data Extraction and Integration
+DB2 (Appstream in AWS):
+
+Since DB2 in Appstream doesn’t allow direct ODBC connections, data must be manually extracted. You can export data into CSV or other formats using DB2 tools or AWS services like S3.
+Manual Step: After manual extraction, import the data into your local system and use pandas for processing:
+python
+Copy code
+import pandas as pd
+
+df_db2 = pd.read_csv('db2_data.csv')
+Databricks: Use the JDBC/SQL connector for querying tables directly from Databricks.
+
+python
+Copy code
+from databricks import sql
+conn = sql.connect(server_hostname='databricks-server',
+                   http_path='databricks-cluster',
+                   access_token='your-token')
+query = "SELECT * FROM business_events_table"
+df_databricks = pd.read_sql(query, conn)
+Local Data Warehouse: Connect using pyodbc or SQLAlchemy to perform SQL queries.
+
+python
+Copy code
+import pyodbc
+
+conn = pyodbc.connect('DSN=DataWarehouse;UID=user;PWD=password')
+query = "SELECT * FROM warehouse_table"
+df_warehouse = pd.read_sql(query, conn)
+Data Merging: After extracting data from all sources, merge them using pandas.
+
+python
+Copy code
+merged_df = pd.merge(df_db2, df_databricks, on='common_column')
+final_df = pd.merge(merged_df, df_warehouse, on='common_column')
+2. Data Preprocessing
+Handle missing values, duplicates, and perform any necessary feature engineering.
+
+python
+Copy code
+final_df.fillna(method='ffill', inplace=True)
+final_df.drop_duplicates(inplace=True)
+Store the cleaned and merged data back into your local data warehouse.
+
+python
+Copy code
+final_df.to_sql('merged_table', conn, if_exists='replace', index=False)
+3. EDA (Exploratory Data Analysis)
+Perform basic exploratory analysis on the extracted data.
+python
+Copy code
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.pairplot(final_df)
+plt.show()
+4. Environment Setup and Repository Creation
+Virtual Environment: Create a virtual environment and activate it.
+
+bash
+Copy code
+python3 -m venv myenv
+source myenv/bin/activate
+Bitbucket/Jira Repository:
+
+Create the necessary files for your project:
+
+bash
+Copy code
+touch requirements.txt Dockerfile README.md
+Add dependencies to requirements.txt:
+
+bash
+Copy code
+pandas==1.4.2
+scikit-learn==1.1.0
+mlflow==1.26.1
+streamlit==1.10.0
+Create a Dockerfile:
+
+Dockerfile
+Copy code
+FROM python:3.9-slim-buster
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["streamlit", "run", "app.py"]
+5. Data Cleaning and Model Training
+Clean and preprocess the data.
+python
+Copy code
+from sklearn.model_selection import train_test_split
+
+X = final_df.drop('target', axis=1)
+y = final_df['target']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+6. Model Training and Hyperparameter Tuning with MLflow
+Use GridSearchCV for hyperparameter tuning.
+
+python
+Copy code
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
+
+param_grid = {'n_estimators': [100, 200], 'max_depth': [10, 20]}
+grid = GridSearchCV(RandomForestClassifier(), param_grid, cv=5)
+grid.fit(X_train, y_train)
+
+mlflow.log_param("best_params", grid.best_params_)
+Track experiments and log models using MLflow:
+
+python
+Copy code
+import mlflow
+
+mlflow.sklearn.log_model(grid.best_estimator_, "model")
+7. Streamlit and Flask for MVP Dashboard
+Create a Streamlit app for visualization and user interaction.
+python
+Copy code
+import streamlit as st
+import pickle
+
+model = pickle.load(open('model.pkl', 'rb'))
+user_input = st.text_input("Enter input:")
+prediction = model.predict([user_input])
+st.write(f"Prediction: {prediction}")
+8. Dockerize Application
+Create a Docker image for your app and push it to AWS ECR:
+bash
+Copy code
+docker build -t myapp .
+aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
+docker tag myapp:latest <account-id>.dkr.ecr.<region>.amazonaws.com/myapp:latest
+docker push <account-id>.dkr.ecr.<region>.amazonaws.com/myapp:latest
+9. AWS ECS Deployment
+Create an ECS task definition that references the ECR image, and deploy your application:
+In the AWS ECS Console, create a new task definition and configure the task with the image URL from ECR.
+Set the desired number of tasks, configure autoscaling, and define the network settings.
+10. CI/CD Pipeline with Bitbucket/Jira
+CI/CD Setup: In Bitbucket, create a pipeline configuration to automate testing, building, and deploying your Docker image to AWS.
+
+Add the following .bitbucket-pipelines.yml:
+yaml
+Copy code
+image: python:3.9-slim-buster
+
+pipelines:
+  default:
+    - step:
+        name: Test, Build and Deploy
+        script:
+          - pip install -r requirements.txt
+          - pytest
+          - docker build -t myapp .
+          - aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
+          - docker tag myapp:latest <account-id>.dkr.ecr.<region>.amazonaws.com/myapp:latest
+          - docker push <account-id>.dkr.ecr.<region>.amazonaws.com/myapp:latest
+Jira Integration: Track issues and deploys in Jira by linking Bitbucket repositories and using Jira issues to trigger specific builds and deployments.
+
+vbnet
+Copy code
+
+This code block contains the flowchart, all necessary steps, and configuration files needed to complete your pipeline workflow, with references to Bitbucket, AWS ECS
