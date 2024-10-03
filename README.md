@@ -36,33 +36,46 @@ The test performance of the best estimator showed:
 - Develop early warning systems to monitor at-risk borrowers, particularly those with increasing DTI and revolving utilization metrics.
 - Provide financial counseling and restructuring options for borrowers showing signs of financial distress.
 
-## Data Pipeline for Extraction, ML Model, and API Deployment
+@startuml
 
+title Data Pipeline for Extraction, ML Model, and API Deployment
 
-### Flowchart Representation
+start
+:Data Sources;
+:DB2 (Appstream - AWS);
+:Databricks;
+:Local Data Warehouse;
 
-```mermaid
-flowchart TD
-    A[Data Sources] --> B[DB2 (Appstream - AWS)]
-    A --> C[Databricks]
-    A --> D[Local Data Warehouse]
-    B --> |Manual Extraction| E[Preprocessing (pandas)]
-    C --> |SQL Queries| E
-    D --> |SQL Queries| E
-    E --> F[Merged Data Stored in Local Data Warehouse]
-    F --> G[Basic EDA]
-    G --> H[Create Virtual Environment & Repository]
-    H --> I[Load Data & Train Model]
-    I --> J[Data Preprocessing & Cleaning]
-    I --> K[Model Training & Hyperparameter Tuning with MLflow]
-    K --> L[MLflow Logging & UI]
-    L --> M[Save Best Model as Pickle File]
-    M --> N[Streamlit & Flask Dashboard]
-    N --> O[Dockerize Application]
-    O --> P[Push to AWS ECR]
-    P --> Q[Create AWS ECS Task & Deploy Container]
-    Q --> R[API Hosting & Deployment]
-    Q --> T[CI/CD with Bitbucket/Jira]
+if (Data Source) then (DB2)
+    :Manual Extraction;
+    :Preprocessing (pandas);
+else (Databricks)
+    :SQL Queries;
+endif
+
+if (Data Source) then (Local Data Warehouse)
+    :SQL Queries;
+endif
+
+:Merge Data;
+:Basic EDA;
+:Create Virtual Environment & Repository;
+:Load Data & Train Model;
+:Data Preprocessing & Cleaning;
+:Model Training & Hyperparameter Tuning with MLflow;
+:MLflow Logging & UI;
+:Save Best Model as Pickle File;
+:Streamlit & Flask Dashboard;
+:Dockerize Application;
+:Push to AWS ECR;
+:Create AWS ECS Task & Deploy Container;
+:API Hosting & Deployment;
+:CI/CD with Bitbucket/Jira;
+
+stop
+
+@enduml
+
 Details
 1. Data Extraction and Integration
 DB2 (Appstream in AWS):
